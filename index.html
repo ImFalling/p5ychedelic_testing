@@ -19,7 +19,72 @@
             height: 100vh;
             overflow: hidden;
         }
-    </style>
 
+        #sketchContainer{
+            position: fixed;
+            z-index: 0;
+        }
+
+        #toolbarContainer{
+            position: fixed;
+            display: flex;
+            z-index: 1;
+            width: 25%;
+            height: 100%;
+            transition: 0.5s;
+            left: -24%;
+        }
+
+        #toolbar{
+            background-color: rgba(0,0,0,0.5);
+            height: 100vh;
+            z-index: 1;
+            width: 95%;
+            position: relative;
+            box-sizing: border-box;
+            padding: 10%;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        #toolbar > * {
+            position: relative;
+            width: 100%;
+        }
+
+        #toolbarContainer.toggled{
+            left: 0%;
+        }
+
+        #toggleToolbar{
+            width: 1vw;
+            height: 100%;
+            border-right: 2px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+    </style>
+    <script>
+        function toggleToolbox(){
+            var toolbar = document.getElementById("toolbarContainer")
+            if(toolbar.getAttribute("class") == "toggled")
+                toolbar.setAttribute("class", "");
+            else if(toolbar.getAttribute("class") != "toggled")
+                toolbar.setAttribute("class", "toggled");
+        }
+    </script>
+    <div id="sketchContainer"></div>
+    <div id="toolbarContainer">
+        <div id="toolbar">
+            Color 1: <input type="text">
+            Color 2: <input type="text">
+            Color 3: <input type="text">
+            Color 4: <input type="text">
+            Color 5: <input type="text">
+            Color 6: <input type="text">
+            Color 7: <input type="text">
+        </div>
+        <div id="toggleToolbar" onclick="toggleToolbox()"></div>
+    </div>
 </body>
 </html>

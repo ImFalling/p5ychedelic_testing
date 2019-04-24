@@ -1,14 +1,26 @@
 /* GLOBAL VARS */
-//Constant to contain the spectrum of colors
-const ColorSet = {
-    Red: "#FF0000",
-    Orange: "#FF7F00",
-    Yellow: "#FFFF00",
-    Green: "#00FF00",
-    Blue: "#0000FF",
-    Indigo: "#4B0082",
-    Violet: "#9400D3"
+var ColorSets = {
+    Rainbow : {
+        Red: "#FF0000",
+        Orange: "#FF7F00",
+        Yellow: "#FFFF00",
+        Green: "#00FF00",
+        Blue: "#0000FF",
+        Indigo: "#4B0082",
+        Violet: "#9400D3"
+    },
+    Alternate : {
+        Red: "#d8a47f",
+        Orange: "#272932",
+        Yellow: "#e7ecef",
+        Green: "#0f7173",
+        Blue: "#f05d5e",
+        Indigo: "#ffba08",
+        Violet: "#3f88c5"
+    }
 }
+//Variable to contain the spectrum of colors
+var ColorSet = ColorSets.Alternate;
 
 //Vars to store client window size
 var clientWidth = 0;
@@ -17,8 +29,15 @@ var clientHeight = 0;
 //Array to store Section objects
 var SectionList = [];
 
+//Variable for determining amount of base Segments
+var SegmentCount = 5;
+
 //Variable for determining amount of Section objects to generate
 var SectionCount = 21;
+
+//Variable for determining amount of layers to generate
+var LayerCount = 15;
+
 
 //Boolean for cooling down the keydown event listener
 var Cooldown = false;
@@ -42,7 +61,7 @@ const lerpColor = function(a, b, amount) {
 };
 
 //Section object
-function Section(color, lerpRatio, angle, radius){
+function Section(color, lerpRatio, angle, radius, clockwise){
     //Color values
     //Set up colors to lerp between, but only from 0-6 (because of ColorSet size)
     this.startColor = color % 7;
@@ -57,15 +76,16 @@ function Section(color, lerpRatio, angle, radius){
         y: clientHeight / 2
     };
     this.radius = radius;
+    this.clockwise = clockwise;
 
     //Section update function
     this.update = function(){
         this.points = calcSectionPoints(this, this.radius);
 
         // Increase rotational and lerp ratio values (Change this for different speeds)
-        this.startRadian += 0.01;
-        this.endRadian += 0.01;
-        this.lerpRatio += 0.005;
+        this.startRadian += 0.01 * this.clockwise;
+        this.endRadian += 0.01 * this.clockwise;
+        this.lerpRatio += 0.01;
 
         //If the lerp ratio reaches 1, the color has changed entirely to the next color, so shift the color values by 1 and set lerp ratio to 0
         if(this.lerpRatio >= 1){
@@ -110,7 +130,8 @@ function setup(){
     var body = document.querySelector("body");
     clientWidth = body.clientWidth;
     clientHeight = body.clientHeight;
-    createCanvas(clientWidth, clientHeight);
+    var canvas = createCanvas(clientWidth, clientHeight);
+    canvas.parent('sketchContainer');
     background("white");
 
     //Eventlistener for incrementing/decrementing SectionCount by multiples of 7
@@ -146,26 +167,30 @@ function setup(){
     //Calculate how many radians each section will stretch
     var radianIncrement = 2 * Math.PI / SectionCount;
 
-    //For each of the 7 base segments:
-    for(var xi = 0; xi < 7; xi++){
-
-        //For every Section in this segment 
-        for(var i = 0; i < SectionCount/7; i++){
-
-            //Calculate the rotational angle for this Section in radians
-            //by adding the radial increment of one section multiplied by i, 
-            //to the base angle multiplied by xi
-            var angle = (baseRadian * xi) + (radianIncrement * i);
-
-            //Calculate the lerp ratio (meeting point between two colors in hexadecimal) by dividing 1 by the amount of subsection in each base
-            var ratio = 1 / (SectionCount / 7) * i;
-
-            //The color is just the base index, the rest of the color magic is set up in the object constructor
-            var color = xi;
-
-            //Create and push the new Section to the list
-            var tempSection = new Section(color, ratio, angle, 2000);
-            SectionList.push(tempSection);
+    for(var zi = LayerCount; zi > 0; zi--){
+        //For each of the 7 base segments:
+        for(var xi = 0; xi < 7; xi++){
+    
+            //For every Section in this segment 
+            for(var i = 0; i < SectionCount/7; i++){
+    
+                //Calculate the rotational angle for this Section in radians
+                //by adding the radial increment of one section multiplied by i, 
+                //to the base angle multiplied by xi
+                var angle = (baseRadian * xi) + (radianIncrement * i) + zi;
+    
+                //Calculate the lerp ratio (meeting point between two colors in hexadecimal) by dividing 1 by the amount of subsection in each base
+                var ratio = 1 / (SectionCount / 7) * i;
+    
+                //The color is just the base index, the rest of the color magic is set up in the object constructor
+                var color = xi;
+    
+                var direction = (zi % 2 == 0 ? 1 : -1);
+                //Create and push the new Section to the list
+                console.log(1500 / LayerCount * zi);
+                var tempSection = new Section(color, ratio, angle, 1200 / LayerCount * zi, direction);
+                SectionList.push(tempSection);
+            }
         }
     }
     console.log(SectionList);
