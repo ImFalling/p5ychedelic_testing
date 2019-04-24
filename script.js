@@ -17,10 +17,26 @@ var ColorSets = {
         Blue: "#f05d5e",
         Indigo: "#ffba08",
         Violet: "#3f88c5"
+    },
+    PalePastel : {
+        Goldenrod: "#f2f6d0",
+        LightGray: "#d0e1d4",
+        PastelGray: "#d9d2b6",
+        PaleGold: "#e4be9e",
+        OldLavender: "#71697a"
+    },
+    Forest : {
+        DeepBlue: "#05396b",
+        DarkGreen: "#389583",
+        LightGreen: "#5cdb94",
+        Teal: "#8de4af",
+        Egg: "#edf5e0"
+
     }
 }
 //Variable to contain the spectrum of colors
-var ColorSet = ColorSets.Alternate;
+var ColorSet = ColorSets.Forest;
+var ColorIndex = 3;
 
 //Vars to store client window size
 var clientWidth = 0;
@@ -30,14 +46,13 @@ var clientHeight = 0;
 var SectionList = [];
 
 //Variable for determining amount of base Segments
-var SegmentCount = 5;
+var SegmentCount = Object.keys(ColorSet).length;
 
 //Variable for determining amount of Section objects to generate
-var SectionCount = 21;
+var SectionCount = SegmentCount;
 
 //Variable for determining amount of layers to generate
-var LayerCount = 15;
-
+var LayerCount = 5;
 
 //Boolean for cooling down the keydown event listener
 var Cooldown = false;
@@ -64,8 +79,8 @@ const lerpColor = function(a, b, amount) {
 function Section(color, lerpRatio, angle, radius, clockwise){
     //Color values
     //Set up colors to lerp between, but only from 0-6 (because of ColorSet size)
-    this.startColor = color % 7;
-    this.endColor = (color+1) % 7;
+    this.startColor = color % SegmentCount;
+    this.endColor = (color+1) % SegmentCount;
     this.lerpRatio = lerpRatio;
 
     //Positional Values
@@ -92,9 +107,9 @@ function Section(color, lerpRatio, angle, radius, clockwise){
             this.lerpRatio = 0;
             this.startColor++;
             this.endColor++;
-            if(this.startColor > 6)
+            if(this.startColor > SegmentCount-1)
                 this.startColor = 0;
-            if(this.endColor > 6)
+            if(this.endColor > SegmentCount-1)
                 this.endColor = 0;
         }
 
@@ -123,6 +138,61 @@ function calcSectionPoints(section, radius){
     return returnable;
 }
 
+function SetColor(colorSet){
+    SectionList = [];
+    var factor = SectionCount / SegmentCount;
+    SegmentCount = Object.keys(colorSet).length;
+    SectionCount = SegmentCount * factor;
+    ColorSet = colorSet;
+    setup();
+}
+
+function SetLayers(Layers){
+    LayerCount = Layers;
+    setup();
+}
+
+//Eventlistener for incrementing/decrementing SectionCount by multiples of 7
+window.addEventListener("keydown", function(event){
+    if(!Cooldown){
+        Cooldown = true;
+
+        //If right arrow
+        if(event.keyCode == 39){
+            SectionList = [];
+            SectionCount += SegmentCount;
+            setup();
+        }
+        //If left arrow and SectionCount will not decrease to 0 
+        else if(event.keyCode == 37 && SectionCount > SegmentCount){
+            SectionList = [];
+            SectionCount -= SegmentCount;
+            setup();
+        }
+
+        //If up arrow
+        else if(event.keyCode == 38){
+            if(ColorIndex >= Object.keys(ColorSets).length - 1)
+                ColorIndex = 0;
+            else
+                ColorIndex += 1;
+            SetColor(ColorSets[Object.keys(ColorSets)[ColorIndex]]);
+        }
+
+        //If down arrow
+        else if(event.keyCode == 40){
+            if(ColorIndex <= 0)
+                ColorIndex = Object.keys(ColorSets).length - 1;
+            else
+                ColorIndex -= 1;
+            SetColor(ColorSets[Object.keys(ColorSets)[ColorIndex]]);
+        }
+        
+        //Cooldown
+        setTimeout(()=>{Cooldown = false}, 150);
+    }
+}, false);
+
 //P5.js init method
 function setup(){
 
@@ -134,45 +204,24 @@ function setup(){
     canvas.parent('sketchContainer');
     background("white");
 
-    //Eventlistener for incrementing/decrementing SectionCount by multiples of 7
-    window.addEventListener("keydown", function(event){
-        if(!Cooldown){
-            Cooldown = true;
-
-            //If right arrow
-            if(event.keyCode == 39){
-                SectionList = [];
-                SectionCount += 7;
-                setup();
-            }
-            //If left arrow and SectionCount will not decrease to 0 
-            else if(event.keyCode == 37 && SectionCount > 7){
-                SectionList = [];
-                SectionCount -= 7
-                setup();
-            }
-
-            //Cooldown
-            setTimeout(()=>{Cooldown = false}, 150);
-        }
-    }, false);
+    
 
     //A minimum of 7 Sections is required due to the ColorSet
     //The SectionList can only be increased in multiples of 7 due to lerp calculations for color between them
     //The Sections is divided into the 7 seperate segments.
 
     //Calculate how many radians each base section will strech
-    var baseRadian = 2 * Math.PI / 7;
+    var baseRadian = 2 * Math.PI / SegmentCount;
 
     //Calculate how many radians each section will stretch
-    var radianIncrement = 2 * Math.PI / SectionCount;
+    var radianIncrement = 2 * Math.PI / SectionCount;  
 
     for(var zi = LayerCount; zi > 0; zi--){
         //For each of the 7 base segments:
-        for(var xi = 0; xi < 7; xi++){
+        for(var xi = 0; xi < SegmentCount; xi++){
     
             //For every Section in this segment 
-            for(var i = 0; i < SectionCount/7; i++){
+            for(var i = 0; i < SectionCount/SegmentCount; i++){
     
                 //Calculate the rotational angle for this Section in radians
                 //by adding the radial increment of one section multiplied by i, 
@@ -180,14 +229,13 @@ function setup(){
                 var angle = (baseRadian * xi) + (radianIncrement * i) + zi;
     
                 //Calculate the lerp ratio (meeting point between two colors in hexadecimal) by dividing 1 by the amount of subsection in each base
-                var ratio = 1 / (SectionCount / 7) * i;
+                var ratio = 1 / (SectionCount / SegmentCount) * i;
     
                 //The color is just the base index, the rest of the color magic is set up in the object constructor
                 var color = xi;
     
                 var direction = (zi % 2 == 0 ? 1 : -1);
                 //Create and push the new Section to the list
-                console.log(1500 / LayerCount * zi);
                 var tempSection = new Section(color, ratio, angle, 1200 / LayerCount * zi, direction);
                 SectionList.push(tempSection);
             }
