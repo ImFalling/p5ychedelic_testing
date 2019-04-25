@@ -42,8 +42,9 @@ var ColorIndex = 3;
 var clientWidth = 0;
 var clientHeight = 0;
 
-//Array to store Section objects
-var SectionList = [];
+
+//A jagged array of Layers filled with sections
+var LayerList = [];
 
 //Variable for determining amount of base Segments
 var SegmentCount = Object.keys(ColorSet).length;
@@ -75,8 +76,17 @@ const lerpColor = function(a, b, amount) {
     return (rr << 16) + (rg << 8) + (rb | 0);
 };
 
+//Layer object
+function Layer(sectionList, direction, radius, colorSet){
+
+    this.sections = sectionList;
+    this.direction = direction;
+    this.radius = radius;
+    this.colorSet = colorSet
+}
+
 //Section object
-function Section(color, lerpRatio, angle, radius, clockwise){
+function Section(color, lerpRatio, angle, radius){
     //Color values
     //Set up colors to lerp between, but only from 0-6 (because of ColorSet size)
     this.startColor = color % SegmentCount;
@@ -91,15 +101,14 @@ function Section(color, lerpRatio, angle, radius, clockwise){
         y: clientHeight / 2
     };
     this.radius = radius;
-    this.clockwise = clockwise;
 
     //Section update function
-    this.update = function(){
+    this.update = function(parent){
         this.points = calcSectionPoints(this, this.radius);
 
         // Increase rotational and lerp ratio values (Change this for different speeds)
-        this.startRadian += 0.01 * this.clockwise;
-        this.endRadian += 0.01 * this.clockwise;
+        this.startRadian += 0.01 * parent.direction;
+        this.endRadian += 0.01 * parent.direction;
         this.lerpRatio += 0.01;
 
         //If the lerp ratio reaches 1, the color has changed entirely to the next color, so shift the color values by 1 and set lerp ratio to 0
@@ -138,8 +147,9 @@ function calcSectionPoints(section, radius){
     return returnable;
 }
 
+//Set new color and recreate all the sections
 function SetColor(colorSet){
-    SectionList = [];
+    LayerList = [];
     var factor = SectionCount / SegmentCount;
     SegmentCount = Object.keys(colorSet).length;
     SectionCount = SegmentCount * factor;
@@ -147,6 +157,7 @@ function SetColor(colorSet){
     setup();
 }
 
+//Set new layercount and recreate all the sections
 function SetLayers(Layers){
     LayerCount = Layers;
     setup();
@@ -159,13 +170,13 @@ window.addEventListener("keydown", function(event){
 
         //If right arrow
         if(event.keyCode == 39){
-            SectionList = [];
+            LayerList = [];
             SectionCount += SegmentCount;
             setup();
         }
         //If left arrow and SectionCount will not decrease to 0 
         else if(event.keyCode == 37 && SectionCount > SegmentCount){
-            SectionList = [];
+            LayerList = [];
             SectionCount -= SegmentCount;
             setup();
         }
@@ -204,8 +215,6 @@ function setup(){
     canvas.parent('sketchContainer');
     background("white");
 
-    
-
     //A minimum of 7 Sections is required due to the ColorSet
     //The SectionList can only be increased in multiples of 7 due to lerp calculations for color between them
     //The Sections is divided into the 7 seperate segments.
@@ -216,7 +225,13 @@ function setup(){
     //Calculate how many radians each section will stretch
     var radianIncrement = 2 * Math.PI / SectionCount;  
 
+    //For each layer
     for(var zi = LayerCount; zi > 0; zi--){
+        //Create a new layer object
+        var tempLayer = new Layer(null, zi % 2 == 0 ? 1 : -1, 1200 / LayerCount * zi, direction)
+
+        //Create a temporary section list
+        var sectionList = [];
         //For each of the 7 base segments:
         for(var xi = 0; xi < SegmentCount; xi++){
     
@@ -234,30 +249,71 @@ function setup(){
                 //The color is just the base index, the rest of the color magic is set up in the object constructor
                 var color = xi;
     
-                var direction = (zi % 2 == 0 ? 1 : -1);
+                var direction = tempLayer.direction;
                 //Create and push the new Section to the list
                 var tempSection = new Section(color, ratio, angle, 1200 / LayerCount * zi, direction);
-                SectionList.push(tempSection);
+                sectionList.push(tempSection);
             }
         }
+
+        //After all sections have been generated and pushed into an array, update the new layer object with the sectionslist.
+        tempLayer.sections = sectionList;
+        LayerList.push(tempLayer);
     }
-    console.log(SectionList);
+    console.log(LayerList);
 }
 
 function draw(){
     //Remove previously drawn frame
     background("white");
     //For each individual section in the sectionlist
-    SectionList.forEach( (element, i) => {
-        //Run update method in element
-        element.update();
-        //Set to current element color
-        fill(element.color);
-        noStroke();
-        //Draw polygon
-        quad(element.origin.x, element.origin.y,
-            element.origin.x, element.origin.y,
-            element.points.x1, element.points.y1,
-            element.points.x2, element.points.y2);
+    LayerList.forEach( (pelement) => {
+        pelement.sections.forEach( (element) => {
+            element.update(pelement);
+            //Set to current element color
+            fill(element.color);
+            noStroke();
+            //Draw polygon
+            quad(element.origin.x, element.origin.y,
+                element.origin.x, element.origin.y,
+                element.points.x1, element.points.y1,
+                element.points.x2, element.points.y2);
+        });
     });
+}
+
+function mouseClicked(){
+    var x = mouseX;
+    var y = mouseY;
+
+    //Calculate the hypotenuse between the cursor and the circle center
+    var center = {
+        x: clientWidth / 2,
+        y: clientHeight / 2
+    }
+    var adjacent = (mouseX < center.x ? center.x - mouseX : mouseX - center.x);
+    var opposite = (mouseY < center.y ? center.y - mouseY : mouseY - center.y);
+    var calculatedRadius = Math.sqrt(adjacent*adjacent + opposite * opposite);
+  
+    
+    for(var i = 0; i < LayerList.length; i++){
+        var element = LayerList[i];
+        if(i == LayerList.length-1){
+            if(calculatedRadius < element.radius && calculatedRadius > 0){
+                console.log(calculatedRadius);
+                console.log(element.radius);
+                console.log(element.radius - (1200 / LayerCount * i + 1));
+                LayerList[i].direction *= -1;
+                break;
+            }
+        }
+
+        if(calculatedRadius < element.radius && calculatedRadius > LayerList[i+1].radius){
+            console.log(calculatedRadius);
+            console.log(element.radius);
+            console.log(element.radius - (1200 / LayerCount * i + 1));
+            LayerList[i].direction *= -1;
+            break;
+        }
+    }
 }
