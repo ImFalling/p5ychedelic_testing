@@ -1,0 +1,78 @@
+body{
+    padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#sketchContainer{
+    position: fixed;
+    z-index: 0;
+}
+
+#toolbarContainer{
+    position: fixed;
+    z-index: 1;
+    width: 25%;
+    height: 100%;
+    transition: 0.5s;
+    left: -25%;
+    padding-right: 1vw;
+    border-right: 2px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+#toolbarContainer.toggled{
+    left: 0%;
+}
+
+#toolbar{
+    background-color: rgba(0,0,0,0.5);
+    height: 100vh;
+    z-index: 1;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+    padding: 10%;
+    color: white;
+    font-family: sans-serif;
+    cursor: default;
+}
+
+#toolbar > * {
+    position: relative;
+    width: 100%;
+}
+
+#toolHead{
+    height: 5vh;
+    background-color: rgba(150, 150, 150, 0.5);
+    display: flex;
+}
+
+.toolSection{
+    height: 5vh;
+    background-color: white;
+}
+
+.toolHeadSection{
+    height: 100%;
+    box-shadow: inset 0px 0px 2px rgba(0,0,0,0.4);
+    width: calc(100% / 3);
+    transition: 0.2s;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+}
+
+.toolHeadSection:hover{
+    box-shadow: inset 0px 0px 3px rgba(0,0,0,0.8);
+    background-color: rgba(71, 71, 71, 0.7);
+}
+
+.toolHeadSection > img {
+    height: 100%;
+    box-sizing: border-box;
+    padding: 10%;
+}
