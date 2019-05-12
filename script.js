@@ -64,10 +64,15 @@ var ScaleFactor = 5;
 //Variable for determining scale direction (1/-1)
 var ScaleDirection = 1;
 
-//Variable for determining shrink
+//Variable for determining if every other layer should have different directions
+var EveryOtherDir = false;
+
+var GlobalDirection = 1;
 
 //Boolean for cooling down the keydown event listener
 var Cooldown = false;
+
+var Origin = {x, y};
 
 //Function for linear interpolation between two hexadecimal color values, with a ratio.
 //Returns a hexadecimal color value.
@@ -276,6 +281,8 @@ function setup(){
     var body = document.querySelector("body");
     clientWidth = body.clientWidth;
     clientHeight = body.clientHeight;
+    Origin.x = clientWidth / 2;
+    Origin.y = clientHeight / 2;
     var canvas = createCanvas(clientWidth, clientHeight);
     canvas.parent('sketchContainer');
     background("white");
@@ -306,7 +313,7 @@ function draw(){
         if(ScaleDirection == 1){
             if(element.radius <= 0){
                 LayerList.pop();
-                var tempLayer = new Layer(null, LayerList[0].direction *= -1, 1500, NextFactor, NextColor)
+                var tempLayer = new Layer(null, (() => {if(EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), 1500, NextFactor, NextColor)
                 tempLayer.GenerateNew(0);
                 LayerList.unshift(tempLayer);
     
@@ -315,8 +322,8 @@ function draw(){
         else if(ScaleDirection == -1){
             if(element.radius >= 1500){
                 LayerList.shift();
-                var tempLayer = new Layer(null, LayerList[0].direction *= -1, 0, NextFactor, NextColor)
-                tempLayer.GenerateNew(0);
+                var tempLayer = new Layer(null, (() => {if(EveryOtherDir) return LayerList[LayerList.length-2].direction *= -1; else return GlobalDirection; })(), 0, NextFactor, NextColor)
+                tempLayer.GenerateNew(LayerList[LayerList.length-2].sections[0].startRadian / 2);
                 LayerList.push(tempLayer);
             }
         }

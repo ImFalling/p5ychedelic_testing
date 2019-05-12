@@ -20,18 +20,6 @@
                 toolbar.setAttribute("class", "toggled");
         }
 
-        function toggleDirection(){
-            LayerList.forEach(element => {
-                element.direction *= -1;
-            });
-        }
-
-        function shiftColor(){
-            LayerList.forEach(element => {
-                element.ShiftColor(1);
-                element.GenerateNew(0);
-            });
-        }
     </script>
     <div id="sketchContainer"></div>
     <div id="toolbarContainer">
@@ -43,10 +31,10 @@
                 <div id="toolHeadRemove" class="toolHeadSection" onclick="RemoveLayer()">
                     <img src="img/remove.svg" alt="">
                 </div>
-                <div id="toolHeadColor" class="toolHeadSection" onclick="shiftColor()">
+                <div id="toolHeadColor" class="toolHeadSection" onclick="Manipulations.IncreaseColorWrapAround()">
                     <img src="img/color.svg" alt="">
                 </div>
-                <div id="toolHeadDirection" class="toolHeadSection" onclick="toggleDirection()">
+                <div id="toolHeadDirection" class="toolHeadSection" onclick="Manipulations.ToggleDirection()">
                     <img src="img/direction.svg" alt="">
                 </div>
 

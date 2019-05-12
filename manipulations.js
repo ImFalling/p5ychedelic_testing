@@ -1,4 +1,4 @@
-var manipulations = {
+var Manipulations = {
     IncreaseFactorWrapAround : function(maxFactor){
         NextFactor = (NextFactor < maxFactor ? NextFactor+1 : 1);
     },
@@ -48,5 +48,9 @@ var manipulations = {
 
     EnableScaling : function(i){
         ScaleDirection = i;
+    },
+
+    ToggleDirection : function(){
+        GlobalDirection *= -1;
     }
 }
