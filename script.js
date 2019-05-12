@@ -58,8 +58,13 @@ var NextFactor = 2;
 //Variable for containing colorset of newly auto-generated layer
 var NextColor = 2;
 
-//Variable for determining shrinkspeed
-var ShrinkFactor = 5;
+//Variable for determining scalespeed
+var ScaleFactor = 5;
+
+//Variable for determining scale direction (1/-1)
+var ScaleDirection = 1;
+
+//Variable for determining shrink
 
 //Boolean for cooling down the keydown event listener
 var Cooldown = false;
@@ -152,7 +157,7 @@ function Layer(sectionList, direction, radius, factor, colorIndex){
     }
 
     this.Update = function(){
-        this.radius -= ShrinkFactor;
+        this.radius -= ScaleFactor * ScaleDirection;
         this.sections.forEach( (element) => {
             element.update(this);
             //Set to current element color
@@ -171,7 +176,7 @@ function Layer(sectionList, direction, radius, factor, colorIndex){
     this.direction = direction;
     this.radius = radius;
     this.factor = factor;
-    if(colorIndex)
+    if(colorIndex != null)
         this.SetColorByIndex(colorIndex);
     else
         this.SetColorByIndex(1);
@@ -298,12 +303,22 @@ function draw(){
     //For each individual section in the sectionlist
     LayerList.forEach( (element) => {
         element.Update();
-        if(element.radius <= 0){
-            LayerList.pop();
-            var tempLayer = new Layer(null, LayerList[0].direction *= -1, 1500, NextFactor, NextColor)
-            tempLayer.GenerateNew(0);
-            LayerList.unshift(tempLayer);
-
+        if(ScaleDirection == 1){
+            if(element.radius <= 0){
+                LayerList.pop();
+                var tempLayer = new Layer(null, LayerList[0].direction *= -1, 1500, NextFactor, NextColor)
+                tempLayer.GenerateNew(0);
+                LayerList.unshift(tempLayer);
+    
+            }
+        }
+        else if(ScaleDirection == -1){
+            if(element.radius >= 1500){
+                LayerList.shift();
+                var tempLayer = new Layer(null, LayerList[0].direction *= -1, 0, NextFactor, NextColor)
+                tempLayer.GenerateNew(0);
+                LayerList.push(tempLayer);
+            }
         }
     });
 }
