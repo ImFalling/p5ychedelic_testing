@@ -46,6 +46,12 @@ var ColorSets = {
     }
 }
 
+var ReactiveDOM = {
+    SegmentCount : null,
+    LerpFactor : null,
+
+};
+
 //Vars to store client window size
 var clientWidth = 0;
 var clientHeight = 0;
@@ -178,9 +184,9 @@ function Layer(direction, radius, factor, colorIndex){
         //If the setting to follow the mouse is enabled
         if(Manipulations.FollowMouse == true){
             //Every update tick, try to approach the cursor
-            if(!(this.origin.x > Origin.x - 15 && this.origin.x < Origin.x + 15 ))
+            if(!(this.origin.x > Origin.x - 10 && this.origin.x < Origin.x + 10 ))
                 this.origin.x = (this.origin.x > Origin.x ? this.origin.x - (1 * Manipulations.MouseFactor) : this.origin.x + (1 * Manipulations.MouseFactor));
-            if(!(this.origin.y > Origin.y - 15 && this.origin.y < Origin.y + 15))
+            if(!(this.origin.y > Origin.y - 10 && this.origin.y < Origin.y + 10))
                 this.origin.y = (this.origin.y > Origin.y ? this.origin.y - (1 * Manipulations.MouseFactor) : this.origin.y + (1 * Manipulations.MouseFactor));
         }
         this.radius -= ScaleSpeed * ScaleDirection;
@@ -213,7 +219,7 @@ function Layer(direction, radius, factor, colorIndex){
     //Calculate how many radians each section will stretch
     this.radianIncrement = 2 * Math.PI / this.sectionCount;  
 
-    this.origin = {x : clientWidth / 2, y: clientHeight/2}
+    this.origin = {x : width / 2, y: height/2}
 }
 
 //Section object
@@ -283,13 +289,13 @@ function AddLayer(){
     var newLayerCount = LayerList.length + 1;
 
     //Create a new layer, make it the largest one, and unshift it into the beginning of the LayerList array
-    var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), clientWidth, NextSegmentFactor, NextColor)
+    var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), width + 500, NextSegmentFactor, NextColor)
     tempLayer.GenerateNew(NextRotationalOffset);
     LayerList.unshift(tempLayer);
 
     //For every existing layer, calculate the new required radius for blending in a new a layer
     for(var i = 1; i < LayerList.length; i++){
-        LayerList[i].radius = clientWidth / newLayerCount * (newLayerCount - i);
+        LayerList[i].radius = (widt + 500) / newLayerCount * (newLayerCount - i);
     }
 }
 
@@ -306,20 +312,25 @@ function setup(){
     canvas.parent('sketchContainer');
     background("white");
 
-    tippy(".toolSectionButton", {
-        
-    });
+    tippy(".toolSectionButton");
+    tippy(".toolSectionInputNumber");
+    tippy("#toolbarContainer");
 
     LayerList = [];
     //For each layer
     for(var zi = LayerCount; zi > 0; zi--){
         //Create a new layer object
-        var tempLayer = new Layer(zi % 2 == 0 ? 1 : -1, clientWidth / LayerCount * zi, NextSegmentFactor, NextColor)
+        var tempLayer = new Layer(zi % 2 == 0 ? 1 : -1, (width+500) / LayerCount * zi, NextSegmentFactor, NextColor)
         tempLayer.GenerateNew(NextRotationalOffset);
         LayerList.push(tempLayer);
     }
     console.log(LayerList);
 
+    //Assign dom elements to reactive dom object
+    ReactiveDOM.SegmentCount = document.getElementById("segmentInputNumberValue");
+    ReactiveDOM.LerpFactor = document.getElementById("lerpInputNumberValue");
+
+    //Initialize click handlers
     InitEventListeners();
 }
 function draw(){
@@ -337,7 +348,7 @@ function draw(){
         if(ScaleDirection == 1){
             if(element.radius <= 0){
                 LayerList.pop();
-                var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), clientWidth, NextSegmentFactor, NextColor)
+                var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), width+500, NextSegmentFactor, NextColor)
                 if(Manipulations.SpawnAtMouse){
                     tempLayer.origin.x = mouseX;
                     tempLayer.origin.y = mouseY;
@@ -348,7 +359,7 @@ function draw(){
             }
         }
         else if(ScaleDirection == -1){
-            if(element.radius >= clientWidth){
+            if(element.radius >= width + 500){
                 LayerList.shift();
                 var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[LayerList.length-2].direction *= -1; else return GlobalDirection; })(), 0, NextSegmentFactor, NextColor)
                 if(Manipulations.SpawnAtMouse){
@@ -360,6 +371,12 @@ function draw(){
             }
         }
     });
+
+    //Reactive DOM Updates
+    if(ReactiveDOM.SegmentCount.innerHTML != NextSegmentFactor)
+        ReactiveDOM.SegmentCount.innerHTML = NextSegmentFactor;
+    if(ReactiveDOM.LerpFactor.innerHTML != LerpFactor)
+        ReactiveDOM.LerpFactor.innerHTML = Math.round(LerpFactor*100)/100;
 }
 
 function InitEventListeners(){

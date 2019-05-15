@@ -24,33 +24,53 @@
 
     </script>
     <div id="sketchContainer"></div>
-    <div id="toolbarContainer">
+    <div data-tippy-content="Customize" id="toolbarContainer">
         <div id="toolbar">
             <div id="toolHead">
                 <div id="toolHeadAdd" data-tippy-content="Add Layer" class="toolSectionButton" onclick="AddLayer()">
-                    <img src="img/add.svg" alt="">
+                    <img class="bigIcon" src="img/add.svg" alt="">
                 </div>
                 <div id="toolHeadRemove" data-tippy-content="Remove Layer" class="toolSectionButton" onclick="RemoveLayer()">
-                    <img src="img/remove.svg" alt="">
+                    <img class="bigIcon" src="img/remove.svg" alt="">
                 </div>
                 <div id="toolHeadColor" data-tippy-content="Shift Color" class="toolSectionButton" onclick="Manipulations.IncreaseColorWrapAround()">
-                    <img src="img/color.svg" alt="">
+                    <img class="bigIcon" src="img/color.svg" alt="">
                 </div>
                 <div id="toolHeadDirection" data-tippy-content="Toggle Rotational Direction" class="toolSectionButton" onclick="Manipulations.ToggleDirection()">
-                    <img src="img/direction.svg" alt="">
+                    <img class="bigIcon" src="img/direction.svg" alt="">
                 </div>
 
             </div>
             <div class="toolSection">
                 <div id="toolScale" class="toolSectionButton" data-tippy-content="Toggle Scaling Direction" onclick="Manipulations.ToggleScaleDirection()">
-                    <img src="img/scale.svg" alt="">
+                    <img class="bigIcon" src="img/scale.svg" alt="">
                 </div>
                 <div id="toolLerpon" class="toolSectionButton" data-tippy-content="Toggle Color Fading On/Off" onclick="Manipulations.ToggleLerping()">
-                    <img src="img/lerp.svg" alt="">
+                    <img class="bigIcon" src="img/lerp.svg" alt="">
                 </div>
                 <div id="toolSpawn" class="toolSectionButton" data-tippy-content="Spawn Layers at Cursor On/Off" onclick="Manipulations.ToggleSpawnAtMouse()">
-                    <img src="img/spawn.svg" alt="">
+                    <img class="bigIcon" src="img/spawn.svg" alt="">
                 </div>
+            </div>
+            <div class="toolSection">
+                <div id="toolSegmentCount" class="toolSectionInputNumber" data-tippy-content="Next Segment Count +/-">
+                    <img class="inputNumberIcon" src="img/segment.svg" alt="">
+                    <div class="toolSectionInputNumberButtons">
+                        <div onclick="Manipulations.IncreaseFactorWrapAround(15)"><img class="inputNumberIcon" src="img/add.svg" alt=""></div>
+                        <div onclick="Manipulations.DecreaseFactorWrapAround(15)"><img class="inputNumberIcon" src="img/remove.svg" alt=""></div>
+                    </div>
+                    <div id="segmentInputNumberValue" class="inputNumberValue">
+                    </div>
+                </div>
+                <div id="toolSegmentCount" class="toolSectionInputNumber" data-tippy-content="Color Fade Speed +/-">
+                        <img class="inputNumberIcon" src="img/lerp.svg" alt="">
+                        <div class="toolSectionInputNumberButtons">
+                            <div onclick="LerpFactor += 0.01"><img class="inputNumberIcon" src="img/add.svg" alt=""></div>
+                            <div onclick="LerpFactor -= 0.01"><img class="inputNumberIcon" src="img/remove.svg" alt=""></div>
+                        </div>
+                        <div id="lerpInputNumberValue" class="inputNumberValue">
+                        </div>
+                    </div>
             </div>
         </div>
     </div>
