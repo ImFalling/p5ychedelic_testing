@@ -39,6 +39,10 @@ var ColorSets = {
         Lavender: "#ad8cff",
         Indigo: "#8795e8",
         Cyan: "#94d0ff"
+    },
+    BlackAndPurple : {
+        Black: "#000000",
+        Purple: "#ad8cff",
     }
 }
 
@@ -50,29 +54,37 @@ var clientHeight = 0;
 var LayerList = [];
 
 //Variable for determining amount of layers to generate
-var LayerCount = 30;
+var LayerCount = 40;
 
 //Variable for containing factorcount of newly auto-generated layer
-var NextFactor = 2;
+var NextSegmentFactor = 2;
 
 //Variable for containing colorset of newly auto-generated layer
 var NextColor = 2;
 
 //Variable for determining scalespeed
-var ScaleFactor = 5;
+var ScaleSpeed = 5;
 
 //Variable for determining scale direction (1/-1)
-var ScaleDirection = 1;
+var ScaleDirection = -1;
 
-//Variable for determining if every other layer should have different directions
-var EveryOtherDir = false;
-
+//Variable for determining global rotational direction (1/-1);
 var GlobalDirection = 1;
 
-//Boolean for cooling down the keydown event listener
-var Cooldown = false;
+//Variable for determining or not to lerp between colors for an extra layer of rotation.
+var LerpingEnabled = true;
 
-var Origin = {x, y};
+//Variable for lerp-factor, increase for faster lerping between colors.
+var LerpFactor = 0.03;
+
+//Variable for determining rotational speed of layers
+var RotationalSpeed = 0.01;
+
+//Variable for setting rotational offset of new layers
+var NextRotationalOffset = 10;
+
+//Global origin point
+var Origin = {x : 0, y : 0};
 
 //Function for linear interpolation between two hexadecimal color values, with a ratio.
 //Returns a hexadecimal color value.
@@ -93,7 +105,7 @@ const lerpColor = function(a, b, amount) {
 };
 
 //Layer object constructor
-function Layer(sectionList, direction, radius, factor, colorIndex){
+function Layer(direction, radius, factor, colorIndex){
     
     //Member functions
     //Set new color and recreate all the sections
@@ -102,7 +114,7 @@ function Layer(sectionList, direction, radius, factor, colorIndex){
         if(this.segmentCount != Object.keys(colorSet).length){
             this.segmentCount = Object.keys(colorSet).length;
             this.sectionCount = this.SegmentCount * this.factor;
-            this.GenerateNew(0);
+            this.GenerateNew(NextRotationalOffset);
         }
 
     }
@@ -114,7 +126,7 @@ function Layer(sectionList, direction, radius, factor, colorIndex){
         if(this.segmentCount != Object.keys(this.colorSet).length){
             this.segmentCount = Object.keys(this.colorSet).length;
             this.sectionCount = this.SegmentCount * this.factor;
-            this.GenerateNew(0);
+            this.GenerateNew(NextRotationalOffset);
         }
     }
     
@@ -162,22 +174,31 @@ function Layer(sectionList, direction, radius, factor, colorIndex){
     }
 
     this.Update = function(){
-        this.radius -= ScaleFactor * ScaleDirection;
+
+        //If the setting to follow the mouse is enabled
+        if(Manipulations.FollowMouse == true){
+            //Every update tick, try to approach the cursor
+            if(!(this.origin.x > Origin.x - 15 && this.origin.x < Origin.x + 15 ))
+                this.origin.x = (this.origin.x > Origin.x ? this.origin.x - (1 * Manipulations.MouseFactor) : this.origin.x + (1 * Manipulations.MouseFactor));
+            if(!(this.origin.y > Origin.y - 15 && this.origin.y < Origin.y + 15))
+                this.origin.y = (this.origin.y > Origin.y ? this.origin.y - (1 * Manipulations.MouseFactor) : this.origin.y + (1 * Manipulations.MouseFactor));
+        }
+        this.radius -= ScaleSpeed * ScaleDirection;
         this.sections.forEach( (element) => {
             element.update(this);
             //Set to current element color
             fill(element.color);
             noStroke();
             //Draw polygon
-            quad(element.origin.x, element.origin.y,
-                element.origin.x, element.origin.y,
+            quad(this.origin.x, this.origin.y,
+                this.origin.x, this.origin.y,
                 element.points.x1, element.points.y1,
                 element.points.x2, element.points.y2);
         });
     }
 
     //Member variables
-    this.sections = sectionList;
+    this.sections = null;
     this.direction = direction;
     this.radius = radius;
     this.factor = factor;
@@ -191,6 +212,8 @@ function Layer(sectionList, direction, radius, factor, colorIndex){
     
     //Calculate how many radians each section will stretch
     this.radianIncrement = 2 * Math.PI / this.sectionCount;  
+
+    this.origin = {x : clientWidth / 2, y: clientHeight/2}
 }
 
 //Section object
@@ -204,10 +227,6 @@ function Section(parent, color, lerpRatio, angle){
     //Positional Values
     this.startRadian = angle;
     this.endRadian = angle + (2 * Math.PI / parent.sectionCount);
-    this.origin = {
-        x: clientWidth / 2,
-        y: clientHeight / 2
-    };
     this.radius = parent.radius;
 
     //Section update function
@@ -215,20 +234,25 @@ function Section(parent, color, lerpRatio, angle){
         this.radius = parent.radius;
         this.points = this.calculatePoints();
 
-        // Increase rotational and lerp ratio values (Change this for different speeds)
-        this.startRadian += 0.01 * parent.direction;
-        this.endRadian += 0.01 * parent.direction;
-        this.lerpRatio += 0.03;
-
-        //If the lerp ratio reaches 1, the color has changed entirely to the next color, so shift the color values by 1 and set lerp ratio to 0
-        if(this.lerpRatio >= 1){
-            this.lerpRatio = 0;
-            this.startColor++;
-            this.endColor++;
-            if(this.startColor > parent.segmentCount-1)
-                this.startColor = 0;
-            if(this.endColor > parent.segmentCount-1)
-                this.endColor = 0;
+        // Increase rotational values (Change this for different speeds)
+        this.startRadian += RotationalSpeed * parent.direction;
+        this.endRadian += RotationalSpeed * parent.direction;
+        
+        //If Lerping is enabled
+        if(LerpingEnabled){
+            //Increase lerp amount by factor
+            this.lerpRatio += LerpFactor;
+    
+            //If the lerp ratio reaches 1, the color has changed entirely to the next color, so shift the color values by 1 and set lerp ratio to 0
+            if(this.lerpRatio >= 1){
+                this.lerpRatio = 0;
+                this.startColor++;
+                this.endColor++;
+                if(this.startColor > parent.segmentCount-1)
+                    this.startColor = 0;
+                if(this.endColor > parent.segmentCount-1)
+                    this.endColor = 0;
+            }
         }
 
         //String parsing the color values to a raw hexadecimal format (#000000 => 0x000000)
@@ -245,33 +269,28 @@ function Section(parent, color, lerpRatio, angle){
 
     this.calculatePoints = function(){
         var returnable = {
-            x1: this.origin.x + (cos(this.startRadian) * this.radius),
-            y1: this.origin.y + (sin(this.startRadian) * this.radius),
-            x2: this.origin.x + (cos(this.endRadian) * this.radius),
-            y2: this.origin.y + (sin(this.endRadian) * this.radius)
+            x1: parent.origin.x + (cos(this.startRadian) * this.radius),
+            y1: parent.origin.y + (sin(this.startRadian) * this.radius),
+            x2: parent.origin.x + (cos(this.endRadian) * this.radius),
+            y2: parent.origin.y + (sin(this.endRadian) * this.radius)
         };
         return returnable;
     }
 }
 
 function AddLayer(){
-    var i = 0;
-    for(var zi = LayerList.length+1; zi > 0 && i < LayerList.length+1; zi--){
-        if(LayerList[i]){
-            LayerList[i].radius = 1500 / LayerList.length+1 * zi;
-            LayerList[i].direction = zi % 2 == 0 ? 1 : -1;
-        }
-        else{
-            var tempLayer = new Layer(null, zi % 2 == 0 ? 1 : -1, 1500 / LayerList.length+1 * zi, 2)
-            tempLayer.GenerateNew(0);
-            LayerList.push(tempLayer);
-        }
-        i++;
-    }
-}
+    //Calculate the new number of layers
+    var newLayerCount = LayerList.length + 1;
 
-function PopLayer(){
-    LayerList.pop();
+    //Create a new layer, make it the largest one, and unshift it into the beginning of the LayerList array
+    var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), clientWidth, NextSegmentFactor, NextColor)
+    tempLayer.GenerateNew(NextRotationalOffset);
+    LayerList.unshift(tempLayer);
+
+    //For every existing layer, calculate the new required radius for blending in a new a layer
+    for(var i = 1; i < LayerList.length; i++){
+        LayerList[i].radius = clientWidth / newLayerCount * (newLayerCount - i);
+    }
 }
 
 //P5.js init method
@@ -287,43 +306,56 @@ function setup(){
     canvas.parent('sketchContainer');
     background("white");
 
-    //A minimum of 7 Sections is required due to the ColorSet
-    //The SectionList can only be increased in multiples of 7 due to lerp calculations for color between them
-    //The Sections is divided into the 7 seperate segments.
+    tippy(".toolSectionButton", {
+        
+    });
 
     LayerList = [];
     //For each layer
     for(var zi = LayerCount; zi > 0; zi--){
         //Create a new layer object
-        var tempLayer = new Layer(null, zi % 2 == 0 ? 1 : -1, 1500 / LayerCount * zi, 2)
-        tempLayer.GenerateNew(0);
+        var tempLayer = new Layer(zi % 2 == 0 ? 1 : -1, clientWidth / LayerCount * zi, NextSegmentFactor, NextColor)
+        tempLayer.GenerateNew(NextRotationalOffset);
         LayerList.push(tempLayer);
     }
     console.log(LayerList);
 
     InitEventListeners();
 }
-
 function draw(){
     //Remove previously drawn frame
     background("white");
+
+    //If the setting to follow the mouse is enabled
+    if(Manipulations.FollowMouse == true){
+        Origin.x = mouseX;
+        Origin.y = mouseY;
+    }
     //For each individual section in the sectionlist
     LayerList.forEach( (element) => {
         element.Update();
         if(ScaleDirection == 1){
             if(element.radius <= 0){
                 LayerList.pop();
-                var tempLayer = new Layer(null, (() => {if(EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), 1500, NextFactor, NextColor)
-                tempLayer.GenerateNew(0);
+                var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[0].direction *= -1; else return GlobalDirection; })(), clientWidth, NextSegmentFactor, NextColor)
+                if(Manipulations.SpawnAtMouse){
+                    tempLayer.origin.x = mouseX;
+                    tempLayer.origin.y = mouseY;
+                }
+                tempLayer.GenerateNew(NextRotationalOffset);
                 LayerList.unshift(tempLayer);
     
             }
         }
         else if(ScaleDirection == -1){
-            if(element.radius >= 1500){
+            if(element.radius >= clientWidth){
                 LayerList.shift();
-                var tempLayer = new Layer(null, (() => {if(EveryOtherDir) return LayerList[LayerList.length-2].direction *= -1; else return GlobalDirection; })(), 0, NextFactor, NextColor)
-                tempLayer.GenerateNew(LayerList[LayerList.length-2].sections[0].startRadian / 2);
+                var tempLayer = new Layer((() => {if(Manipulations.EveryOtherDir) return LayerList[LayerList.length-2].direction *= -1; else return GlobalDirection; })(), 0, NextSegmentFactor, NextColor)
+                if(Manipulations.SpawnAtMouse){
+                    tempLayer.origin.x = mouseX;
+                    tempLayer.origin.y = mouseY;
+                }
+                tempLayer.GenerateNew(NextRotationalOffset);
                 LayerList.push(tempLayer);
             }
         }
@@ -370,57 +402,9 @@ function InitEventListeners(){
         if(e.target == document.getElementById("toolbarContainer"))
             toggleToolbox();
     }, true);
-    
-    //Eventlistener for incrementing/decrementing SectionCount by multiples of 7
-    window.addEventListener("keydown", function(event){
-        if(!Cooldown){
-            Cooldown = true;
-    
-            //If right arrow
-            if(event.keyCode == 39){
-                //For each layer
-                for(var zi = LayerList.length-1; zi >= 0; zi--){
-                    //Highlight the sections key
-                    var element = LayerList[zi];
-                    element.factor += 1;
-                    element.GenerateNew(0);
-                }
-            }
-            //If left arrow and SectionCount will not decrease to 0 
-            else if(event.keyCode == 37){
-                //For each layer
-                for(var zi = LayerList.Length-1; zi >= 0; zi--){
-                    //Highlight the sections key
-                    var element = LayerList[zi];
-                    if(element.factor > 1)
-                        element.factor -= 1;
-                    element.GenerateNew(0);
-                }
-            }
-    
-            //If up arrow
-            else if(event.keyCode == 38){
-                //For each layer
-                for(var zi = LayerList.length-1; zi >= 0; zi--){
-                    //Highlight the sections key
-                    var element = LayerList[zi];
-                    element.ShiftColor(1);
-                    
-                }
-            }
-    
-            //If down arrow
-            else if(event.keyCode == 40){
-                //For each layer
-                for(var zi = LayerList.length-1; zi >= 0; zi--){
-                    //Highlight the sections key
-                    var element = LayerList[zi];
-                    element.ShiftColor(-1);          
-                }
-            }
-            
-            //Cooldown
-            setTimeout(()=>{Cooldown = false}, 150);
-        }
-    }, false);
 }
+
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+}
+

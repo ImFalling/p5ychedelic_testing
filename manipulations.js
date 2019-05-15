@@ -1,34 +1,45 @@
 var Manipulations = {
     IncreaseFactorWrapAround : function(maxFactor){
-        NextFactor = (NextFactor < maxFactor ? NextFactor+1 : 1);
+        NextSegmentFactor = (NextSegmentFactor < maxFactor ? NextSegmentFactor+1 : 1);
     },
     
     DecreaseFactorWrapAround : function(maxFactor){
-        NextFactor = (NextFactor-1 > 1 ? NextFactor-1 : maxFactor);
+        NextSegmentFactor = (NextSegmentFactor-1 > 1 ? NextSegmentFactor-1 : maxFactor);
     },
     
-    PositiveRubberband : true,
+    PositiveSegmentRubberband : true,
     
-    RubberbandFactor : function(maxFactor){
-        if(this.PositiveRubberband){
-            if(NextFactor < maxFactor)
-                NextFactor += 1;
+    RubberbandFactor : function(maxFactor, minFactor){
+        if(minFactor == null)
+            minFactor = 1;
+        if(this.PositiveSegmentRubberband){
+            if(NextSegmentFactor < maxFactor)
+                NextSegmentFactor += 1;
             else{
-                this.PositiveRubberband = false;
-                NextFactor = maxFactor;
-                NextFactor -= 1;
+                this.PositiveSegmentRubberband = false;
+                NextSegmentFactor = maxFactor;
+                NextSegmentFactor -= 1;
             }
         }
         else{
-            if(NextFactor > 1){
-                NextFactor -= 1;
-            }
+            if(NextSegmentFactor > minFactor)
+                NextSegmentFactor -= 1;
             else{
-                this.PositiveRubberband = true;
-                NextFactor = 1;
-                NextFactor += 1;
+                this.PositiveSegmentRubberband = true;
+                NextSegmentFactor = minFactor;
+                NextSegmentFactor += 1;
             }
         }
+    },
+
+    IntervalSegmentFactorRubberband : function(maxFactor, minFactor, interval){
+        this.facInt = setInterval( () => {
+            this.RubberbandFactor(maxFactor, minFactor);
+        }, interval);
+    },
+
+    ClearSegmentFactorInterval : function(){
+        clearInterval(this.facInt);
     },
     
     IncreaseColorWrapAround : function(){
@@ -50,7 +61,61 @@ var Manipulations = {
         ScaleDirection = i;
     },
 
+    EveryOtherDir : false,
+
     ToggleDirection : function(){
         GlobalDirection *= -1;
+    },
+
+    FollowMouse : true,
+
+    ToggleFollowMouse : function(){
+        if(this.FollowMouse)
+            this.FollowMouse = false;
+        else
+        this.FollowMouse = true;
+    },
+
+    MouseFactor : 3,
+    SpawnAtMouse : false,
+
+    ToggleSpawnAtMouse : function(){
+        if(this.SpawnAtMouse)
+            this.SpawnAtMouse = false;
+        else
+            this.SpawnAtMouse = true;
+    },
+
+    IntervalRotationalOffset : function(offset, interval){
+        this.rotInt = setInterval(()=> {NextRotationalOffset += offset}, interval);
+    },
+    
+    ClearRotationalInterval : function(){
+        clearInterval(this.rotInt);
+    },
+
+    ToggleLerping : function(){
+        if(LerpingEnabled)
+            LerpingEnabled = false;
+        else
+            LerpingEnabled = true;
+    },
+
+    PositiveLerpingRubberband : true,
+
+    IntervalLerpRatioRubberband : function(min, max, amount, interval){
+        this.lerpInt = setInterval(() => {
+
+            if(this.PositiveLerpingRubberband){
+                LerpFactor += amount;
+                if(LerpFactor >= max)
+                    this.PositiveLerpingRubberband = false;
+            }
+            else{
+                LerpFactor -= amount;
+                if(LerpFactor <= min)
+                    this.PositiveLerpingRubberband = true;
+            }
+        }, interval);
     }
 }

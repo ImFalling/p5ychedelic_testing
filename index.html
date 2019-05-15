@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Processing</title>
+    <script src="https://unpkg.com/popper.js@1"></script>
+    <script src="https://unpkg.com/tippy.js@4"></script>
     <script src="p5.min.js"></script>
-    <script src="script.js"></script>
+    <script src="core.js"></script>
     <script src="manipulations.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -25,21 +27,31 @@
     <div id="toolbarContainer">
         <div id="toolbar">
             <div id="toolHead">
-                <div id="toolHeadAdd" class="toolHeadSection" onclick="AddLayer()">
+                <div id="toolHeadAdd" data-tippy-content="Add Layer" class="toolSectionButton" onclick="AddLayer()">
                     <img src="img/add.svg" alt="">
                 </div>
-                <div id="toolHeadRemove" class="toolHeadSection" onclick="RemoveLayer()">
+                <div id="toolHeadRemove" data-tippy-content="Remove Layer" class="toolSectionButton" onclick="RemoveLayer()">
                     <img src="img/remove.svg" alt="">
                 </div>
-                <div id="toolHeadColor" class="toolHeadSection" onclick="Manipulations.IncreaseColorWrapAround()">
+                <div id="toolHeadColor" data-tippy-content="Shift Color" class="toolSectionButton" onclick="Manipulations.IncreaseColorWrapAround()">
                     <img src="img/color.svg" alt="">
                 </div>
-                <div id="toolHeadDirection" class="toolHeadSection" onclick="Manipulations.ToggleDirection()">
+                <div id="toolHeadDirection" data-tippy-content="Toggle Rotational Direction" class="toolSectionButton" onclick="Manipulations.ToggleDirection()">
                     <img src="img/direction.svg" alt="">
                 </div>
 
             </div>
-            <div class="toolSection"></div>
+            <div class="toolSection">
+                <div id="toolScale" class="toolSectionButton" data-tippy-content="Toggle Scaling Direction" onclick="Manipulations.ToggleScaleDirection()">
+                    <img src="img/scale.svg" alt="">
+                </div>
+                <div id="toolLerpon" class="toolSectionButton" data-tippy-content="Toggle Color Fading On/Off" onclick="Manipulations.ToggleLerping()">
+                    <img src="img/lerp.svg" alt="">
+                </div>
+                <div id="toolSpawn" class="toolSectionButton" data-tippy-content="Spawn Layers at Cursor On/Off" onclick="Manipulations.ToggleSpawnAtMouse()">
+                    <img src="img/spawn.svg" alt="">
+                </div>
+            </div>
         </div>
     </div>
 </body>

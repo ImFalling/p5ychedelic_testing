@@ -1,3 +1,7 @@
+:root{
+    font-family: sans-serif;
+}
+
 body{
     padding: 0;
     margin: 0;
@@ -9,6 +13,7 @@ body{
 #sketchContainer{
     position: fixed;
     z-index: 0;
+    cursor: none;
 }
 
 #toolbarContainer{
@@ -47,31 +52,39 @@ body{
 
 #toolHead{
     height: 5vh;
-    background-color: rgba(150, 150, 150, 0.5);
     display: flex;
 }
 
 .toolSection{
     height: 5vh;
-    background-color: white;
-}
-
-.toolHeadSection{
-    height: 100%;
-    box-shadow: inset 0px 0px 2px rgba(0,0,0,0.4);
-    width: calc(100% / 3);
-    transition: 0.2s;
-    cursor: pointer;
     display: flex;
     justify-content: center;
 }
 
-.toolHeadSection:hover{
+.toolSectionSection{
+    height: 100%;
+    width: 100%;
+    background-color: white;
+}
+
+.toolSectionButton{
+    height: 100%;
+    background-color: rgba(150, 150, 150, 0.5);
+    box-shadow: inset 0px 0px 2px rgba(0,0,0,0.4);
+    width: calc(100%/3);
+    transition: 0.2s;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+
+}
+
+.toolSectionButton:hover{
     box-shadow: inset 0px 0px 3px rgba(0,0,0,0.8);
     background-color: rgba(71, 71, 71, 0.7);
 }
 
-.toolHeadSection > img {
+#toolbar *> img {
     height: 100%;
     box-sizing: border-box;
     padding: 10%;
