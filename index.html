@@ -72,6 +72,26 @@
                         </div>
                     </div>
             </div>
+            <div class="toolSection">
+                <div id="toolSegmentCount" class="toolSectionInputNumber" data-tippy-content="Next Segment Count +/-">
+                    <img class="inputNumberIcon" src="img/segment.svg" alt="">
+                    <div class="toolSectionInputNumberButtons">
+                        <div onclick="Manipulations.IncreaseFactorWrapAround(15)"><img class="inputNumberIcon" src="img/add.svg" alt=""></div>
+                        <div onclick="Manipulations.DecreaseFactorWrapAround(15)"><img class="inputNumberIcon" src="img/remove.svg" alt=""></div>
+                    </div>
+                    <div id="segmentInputNumberValue" class="inputNumberValue">
+                    </div>
+                </div>
+                <div id="toolSegmentCount" class="toolSectionInputNumber" data-tippy-content="Color Fade Speed +/-">
+                        <img class="inputNumberIcon" src="img/lerp.svg" alt="">
+                        <div class="toolSectionInputNumberButtons">
+                            <div onclick="LerpFactor += 0.01"><img class="inputNumberIcon" src="img/add.svg" alt=""></div>
+                            <div onclick="LerpFactor -= 0.01"><img class="inputNumberIcon" src="img/remove.svg" alt=""></div>
+                        </div>
+                        <div id="lerpInputNumberValue" class="inputNumberValue">
+                        </div>
+                    </div>
+            </div>
         </div>
     </div>
 </body>
